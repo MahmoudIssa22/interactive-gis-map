@@ -1,0 +1,53 @@
+html, body {
+  height: 100%;
+  margin: 0;
+  font-family: Arial, sans-serif;
+}
+
+#map {
+  height: calc(100% - 70px);
+}
+
+/* 🔹 Top Panel */
+.top-panel {
+  height: 70px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 10px;
+  background: #f5f6f7;
+  border-bottom: 1px solid #ccc;
+}
+
+.top-panel label {
+  font-size: 12px;
+  display: block;
+}
+
+.top-panel button,
+.top-panel select {
+  padding: 5px 8px;
+}
+
+.export {
+  background: #333;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+}
+
+.status-toggle {
+  display: flex;
+  flex-direction: column;
+}
+
+.filters {
+  display: flex;
+  gap: 10px;
+  font-size: 13px;
+  margin-left: 10px;
+}
+
+.filters label {
+  cursor: pointer;
+}

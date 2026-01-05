@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Interactive GIS Map</title>
+
+  <!-- Leaflet -->
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  />
+
+  <link
+  rel="stylesheet"
+  href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css"
+/>
+<link
+  rel="stylesheet"
+  href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css"
+/>
+
+
+  <!-- Fullscreen -->
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet.fullscreen@1.6.0/Control.FullScreen.css"
+  />
+
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- 🔹 Top Control Panel -->
+<div class="top-panel">
+  <div>
+    <label>1) File</label>
+    <button>Choose Excel / CSV</button>
+  </div>
+
+  <div class="filters">
+  <label><input type="checkbox" checked value="Known"> Known</label>
+  <label><input type="checkbox" checked value="Cancelled"> Cancelled</label>
+  <label><input type="checkbox" checked value="Unknown"> Unknown</label>
+</div>
+
+
+  <div>
+    <label>2) X (Lat)</label>
+    <select>
+      <option>Lat column</option>
+    </select>
+  </div>
+
+  <div>
+    <label>Y (Lon)</label>
+    <select>
+      <option>Lon column</option>
+    </select>
+  </div>
+
+  <div>
+    <label>Status field</label>
+    <select>
+      <option>Main_Statu</option>
+    </select>
+  </div>
+
+  <div class="status-toggle">
+    <label>Enable status coloring</label>
+    <input type="checkbox" checked>
+  </div>
+
+  <button class="export">Export GeoJSON</button>
+</div>
+
+<!-- 🔹 Map -->
+<div id="map"></div>
+
+<!-- Leaflet -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet.fullscreen@1.6.0/Control.FullScreen.js"></script>
+<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+
+<script src="script.js"></script>
+</body>
+</html>
