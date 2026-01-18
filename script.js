@@ -24,7 +24,7 @@ const topo = L.tileLayer(
 );
 
 /*********************************
- * 3️⃣ ألوان حسب الحالة
+ * 3️⃣ ألوان
  *********************************/
 function getColor(status) {
   switch (status) {
@@ -36,22 +36,28 @@ function getColor(status) {
 }
 
 /*********************************
- * 4️⃣ متغيرات عامة
+ * 4️⃣ البيانات العامة
  *********************************/
-let allData;          // كل GeoJSON
-let pointsLayer;     // طبقة النقاط
-const myLocation = L.layerGroup();
+let baseData = {
+  type: "FeatureCollection",
+  features: []
+};
+
+let csvData = {
+  type: "FeatureCollection",
+  features: []
+};
+
+let baseLayer;
+let csvLayer;
 
 /*********************************
- * 5️⃣ رسم النقاط
+ * 5️⃣ رسم الطبقة الأساسية
  *********************************/
-function drawPoints(filteredData) {
+function drawBaseLayer() {
+  if (baseLayer) map.removeLayer(baseLayer);
 
-  if (pointsLayer) {
-    map.removeLayer(pointsLayer);
-  }
-
-  pointsLayer = L.geoJSON(filteredData, {
+  baseLayer = L.geoJSON(baseData, {
     pointToLayer: (feature, latlng) =>
       L.circleMarker(latlng, {
         radius: 7,
@@ -60,29 +66,50 @@ function drawPoints(filteredData) {
         weight: 1,
         fillOpacity: 0.9
       }),
-
     onEachFeature: (feature, layer) => {
-      const p = feature.properties;
-      layer.bindPopup(`
-        <b>Code:</b> ${p.SWA_Code ?? "-"}<br>
-        <b>Name:</b> ${p.CityGate_N ?? "-"}<br>
-        <b>Status:</b> ${p.Main_Statu ?? "-"}
-      `);
+      layer.bindPopup(
+        `<b>Name:</b> ${feature.properties.CityGate_N ?? "-"}<br>
+         <b>Status:</b> ${feature.properties.Main_Statu ?? "-"}`
+      );
     }
   }).addTo(map);
 }
 
 /*********************************
- * 6️⃣ تحميل GeoJSON
+ * 6️⃣ رسم طبقة CSV (testing)
+ *********************************/
+function drawCSVLayer() {
+  if (csvLayer) map.removeLayer(csvLayer);
+
+  csvLayer = L.geoJSON(csvData, {
+    pointToLayer: (feature, latlng) =>
+      L.circleMarker(latlng, {
+        radius: 7,
+        fillColor: "#3498db",
+        color: "#000",
+        weight: 1,
+        fillOpacity: 0.9
+      }),
+    onEachFeature: (feature, layer) => {
+      layer.bindPopup("<b>CSV Testing Point</b>");
+    }
+  });
+
+  if (document.getElementById("toggleCSV").checked) {
+    csvLayer.addTo(map);
+  }
+}
+
+/*********************************
+ * 7️⃣ تحميل GeoJSON الأساسي
  *********************************/
 fetch("data.geojson")
   .then(res => res.json())
   .then(data => {
-    allData = data;
-    drawPoints(allData);
-    map.fitBounds(pointsLayer.getBounds());
+    baseData.features.push(...data.features);
+    drawBaseLayer();
+    map.fitBounds(baseLayer.getBounds());
 
-    // Layer Control بعد التحميل
     L.control.layers(
       {
         "OpenStreetMap": osm,
@@ -90,63 +117,104 @@ fetch("data.geojson")
         "OpenTopoMap": topo
       },
       {
-        "Points": pointsLayer,
-        "My Location": myLocation
+        "Base Points": baseLayer
       }
     ).addTo(map);
   });
 
 /*********************************
- * 7️⃣ Filters (Checkboxes)
+ * 8️⃣ Upload CSV (يضاف فوق البيانات)
  *********************************/
-function applyFilters() {
-  const selected = Array.from(
-    document.querySelectorAll(".filters input:checked")
-  ).map(cb => cb.value);
+document.getElementById("csvInput").addEventListener("change", function (e) {
 
-  const filtered = {
-    type: "FeatureCollection",
-    features: allData.features.filter(
-      f => selected.includes(f.properties.Main_Statu)
-    )
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+
+  reader.onload = function (event) {
+
+    const lines = event.target.result
+      .split("\n")
+      .map(l => l.trim())
+      .filter(Boolean);
+
+    if (lines.length < 2) {
+      alert("CSV فارغ");
+      return;
+    }
+
+    const headers = lines[0].split(",");
+    const latIndex = headers.indexOf("lat");
+    const lonIndex = headers.indexOf("lon");
+
+    if (latIndex === -1 || lonIndex === -1) {
+      alert("CSV لازم يحتوي lat و lon");
+      return;
+    }
+
+    for (let i = 1; i < lines.length; i++) {
+      const cols = lines[i].split(",");
+      const lat = parseFloat(cols[latIndex]);
+      const lon = parseFloat(cols[lonIndex]);
+      if (isNaN(lat) || isNaN(lon)) continue;
+
+      csvData.features.push({
+        type: "Feature",
+        properties: { source: "CSV" },
+        geometry: {
+          type: "Point",
+          coordinates: [lon, lat]
+        }
+      });
+    }
+
+    drawCSVLayer();
   };
 
-  drawPoints(filtered);
-}
-
-// ربط الفلاتر
-document.querySelectorAll(".filters input").forEach(cb => {
-  cb.addEventListener("change", applyFilters);
+  reader.readAsText(file);
 });
 
 /*********************************
- * 8️⃣ My Location
+ * 9️⃣ Checkbox إظهار / إخفاء CSV
  *********************************/
-map.on("locationfound", e => {
-  myLocation.clearLayers();
-  L.marker(e.latlng).addTo(myLocation);
+document.getElementById("toggleCSV").addEventListener("change", function () {
+  if (this.checked) {
+    drawCSVLayer();
+  } else {
+    if (csvLayer) map.removeLayer(csvLayer);
+  }
 });
 
 /*********************************
- * 9️⃣ Locate Button
+ * 🔟 Export كل البيانات
  *********************************/
-const locateBtn = L.control({ position: "bottomleft" });
-locateBtn.onAdd = () => {
-  const btn = L.DomUtil.create("button", "map-btn");
-  btn.innerHTML = "📍 Locate";
-  btn.onclick = () => map.locate({ setView: true, maxZoom: 12 });
-  return btn;
-};
-locateBtn.addTo(map);
+document.getElementById("exportBtn").addEventListener("click", () => {
 
-/*********************************
- * 🔟 Reset Button
- *********************************/
-const resetBtn = L.control({ position: "bottomleft" });
-resetBtn.onAdd = () => {
-  const btn = L.DomUtil.create("button", "map-btn");
-  btn.innerHTML = "🔄 Reset";
-  btn.onclick = () => map.fitBounds(pointsLayer.getBounds());
-  return btn;
-};
-resetBtn.addTo(map);
+  const allFeatures = [
+    ...baseData.features,
+    ...csvData.features
+  ];
+
+  if (!allFeatures.length) {
+    alert("لا يوجد بيانات");
+    return;
+  }
+
+  const exportData = {
+    type: "FeatureCollection",
+    features: allFeatures
+  };
+
+  const blob = new Blob(
+    [JSON.stringify(exportData, null, 2)],
+    { type: "application/json" }
+  );
+
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "all_points.geojson";
+  a.click();
+  URL.revokeObjectURL(url);
+});
