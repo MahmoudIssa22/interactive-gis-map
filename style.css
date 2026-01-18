@@ -5,7 +5,7 @@ html, body {
 }
 
 #map {
-  height: calc(100% - 70px);
+  height: calc(100vh - 70px);
 }
 
 /* 🔹 Top Panel */
@@ -25,7 +25,7 @@ html, body {
 }
 
 .top-panel button,
-.top-panel select {
+.top-panel input {
   padding: 5px 8px;
 }
 
@@ -36,18 +36,33 @@ html, body {
   cursor: pointer;
 }
 
-.status-toggle {
-  display: flex;
-  flex-direction: column;
+.export:hover {
+  background: #000;
 }
 
 .filters {
   display: flex;
   gap: 10px;
   font-size: 13px;
-  margin-left: 10px;
 }
 
-.filters label {
+.keep-data {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+}
+
+/* 🔹 Map Buttons */
+.map-btn {
+  background: #fff;
+  border: 1px solid #ccc;
+  padding: 6px 10px;
+  margin-bottom: 5px;
   cursor: pointer;
+  font-size: 12px;
+}
+
+.map-btn:hover {
+  background: #f0f0f0;
 }
